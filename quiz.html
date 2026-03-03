@@ -58,9 +58,43 @@
       font-size: 1.25rem;
       font-weight: 700;
       color: #1f2937;
-      margin-bottom: 24px;
+      margin-bottom: 12px;
       line-height: 1.5;
     }
+
+    /* ── Clue ── */
+    .clue-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .btn-clue {
+      padding: 6px 14px;
+      border: 2px solid #f59e0b;
+      border-radius: 99px;
+      background: white;
+      color: #b45309;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .btn-clue:hover:not(:disabled) { background: #fffbeb; }
+    .btn-clue:disabled { opacity: 0.45; cursor: default; }
+    .clue-text {
+      font-size: 0.88rem;
+      color: #92400e;
+      background: #fffbeb;
+      border: 1.5px solid #fcd34d;
+      border-radius: 8px;
+      padding: 6px 12px;
+      display: none;
+      animation: fadeIn 0.2s ease;
+    }
+    .clue-text.visible { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 
     /* ── Choices ── */
     .choices { display: grid; gap: 12px; }
@@ -211,6 +245,10 @@
       <div class="progress-bar" id="progress-bar" style="width:0%"></div>
     </div>
     <p class="question-text" id="question-text"></p>
+    <div class="clue-row">
+      <button class="btn-clue" id="clue-btn" onclick="showClue()">💡 Show Clue</button>
+      <span class="clue-text" id="clue-text"></span>
+    </div>
     <div class="choices" id="choices"></div>
     <div class="feedback" id="feedback"></div>
     <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()" disabled>Next Question →</button>
@@ -233,52 +271,62 @@
     {
       q: "What is the largest planet in our solar system?",
       choices: ["Saturn", "Jupiter", "Neptune", "Uranus"],
-      answer: 1
+      answer: 1,
+      clue: "This planet has a famous storm called the Great Red Spot."
     },
     {
       q: "Which country invented pizza?",
       choices: ["France", "Greece", "Italy", "Spain"],
-      answer: 2
+      answer: 2,
+      clue: "It was first made in the city of Naples in the 18th century."
     },
     {
       q: "How many bones are in the adult human body?",
       choices: ["196", "206", "216", "226"],
-      answer: 1
+      answer: 1,
+      clue: "Babies are born with around 270 bones that fuse together over time."
     },
     {
       q: "Which element has the chemical symbol 'Au'?",
       choices: ["Silver", "Aluminum", "Argon", "Gold"],
-      answer: 3
+      answer: 3,
+      clue: "Its symbol comes from the Latin word 'aurum'."
     },
     {
       q: "What year did the Titanic sink?",
       choices: ["1908", "1912", "1916", "1920"],
-      answer: 1
+      answer: 1,
+      clue: "It sank on its very first voyage, in April of that year."
     },
     {
       q: "Which ocean is the largest?",
       choices: ["Atlantic", "Indian", "Arctic", "Pacific"],
-      answer: 3
+      answer: 3,
+      clue: "It covers more than 30% of Earth's total surface area."
     },
     {
       q: "Who painted the Mona Lisa?",
       choices: ["Michelangelo", "Raphael", "Leonardo da Vinci", "Caravaggio"],
-      answer: 2
+      answer: 2,
+      clue: "He was also a scientist, engineer, and inventor — a true Renaissance man."
     },
     {
       q: "What is the fastest land animal?",
       choices: ["Lion", "Cheetah", "Pronghorn", "Greyhound"],
-      answer: 1
+      answer: 1,
+      clue: "It can accelerate from 0 to 60 mph in about 3 seconds."
     },
     {
       q: "How many sides does a hexagon have?",
       choices: ["5", "7", "8", "6"],
-      answer: 3
+      answer: 3,
+      clue: "Honeybees build their combs using cells of this shape."
     },
     {
       q: "Which planet is known as the Red Planet?",
       choices: ["Venus", "Mars", "Jupiter", "Mercury"],
-      answer: 1
+      answer: 1,
+      clue: "Its reddish color comes from iron oxide — essentially rust — on its surface."
     }
   ];
 
@@ -307,6 +355,13 @@
     document.getElementById('feedback').className = 'feedback';
     document.getElementById('feedback').textContent = '';
 
+    const clueBtn = document.getElementById('clue-btn');
+    const clueText = document.getElementById('clue-text');
+    clueBtn.disabled = false;
+    clueBtn.textContent = '💡 Show Clue';
+    clueText.textContent = '';
+    clueText.classList.remove('visible');
+
     const nextBtn = document.getElementById('next-btn');
     nextBtn.disabled = true;
     nextBtn.textContent = current === questions.length - 1 ? 'See Results 🎉' : 'Next Question →';
@@ -329,6 +384,7 @@
     const feedback = document.getElementById('feedback');
 
     allChoices.forEach(btn => { btn.disabled = true; });
+    document.getElementById('clue-btn').disabled = true;
 
     if (selected === correct) {
       allChoices[selected].classList.add('correct');
@@ -346,6 +402,15 @@
     document.getElementById('next-btn').disabled = false;
 
     userAnswers.push({ question: q.q, selected, correct, choices: q.choices });
+  }
+
+  function showClue() {
+    const clueBtn = document.getElementById('clue-btn');
+    const clueText = document.getElementById('clue-text');
+    clueText.textContent = questions[current].clue;
+    clueText.classList.add('visible');
+    clueBtn.disabled = true;
+    clueBtn.textContent = '💡 Clue Revealed';
   }
 
   function nextQuestion() {
