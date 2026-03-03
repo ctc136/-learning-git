@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trivia Quiz!</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 640px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    /* ── Start Screen ── */
+    #start-screen { text-align: center; }
+    #start-screen h1 { font-size: 2.8rem; color: #5b21b6; margin-bottom: 8px; }
+    #start-screen p  { color: #6b7280; font-size: 1.1rem; margin-bottom: 32px; }
+
+    /* ── Progress ── */
+    .progress-bar-wrap {
+      background: #e5e7eb;
+      border-radius: 99px;
+      height: 10px;
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #a78bfa, #7c3aed);
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: #9ca3af;
+      margin-bottom: 6px;
+    }
+
+    /* ── Question ── */
+    .question-text {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    /* ── Choices ── */
+    .choices { display: grid; gap: 12px; }
+    .choice {
+      padding: 14px 18px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1rem;
+      color: #374151;
+      background: white;
+      text-align: left;
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .choice:hover:not(:disabled) {
+      border-color: #a78bfa;
+      background: #f5f3ff;
+      transform: translateY(-1px);
+    }
+    .choice .badge {
+      font-weight: 700;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+    }
+    .choice.correct {
+      border-color: #10b981;
+      background: #ecfdf5;
+      color: #065f46;
+    }
+    .choice.correct .badge { background: #10b981; color: white; }
+    .choice.wrong {
+      border-color: #ef4444;
+      background: #fef2f2;
+      color: #991b1b;
+    }
+    .choice.wrong .badge { background: #ef4444; color: white; }
+    .choice.reveal-correct {
+      border-color: #10b981;
+      background: #ecfdf5;
+      color: #065f46;
+    }
+    .choice.reveal-correct .badge { background: #10b981; color: white; }
+    .choice:disabled { cursor: default; transform: none; }
+
+    /* ── Feedback ── */
+    .feedback {
+      margin-top: 20px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      display: none;
+      align-items: center;
+      gap: 10px;
+    }
+    .feedback.correct { background: #ecfdf5; color: #065f46; display: flex; }
+    .feedback.wrong   { background: #fef2f2; color: #991b1b; display: flex; }
+
+    /* ── Next button ── */
+    .btn {
+      margin-top: 28px;
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-primary {
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
+      color: white;
+      box-shadow: 0 4px 15px rgba(124,58,237,0.4);
+    }
+    .btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+    /* ── Score tally ── */
+    .score-tally {
+      text-align: right;
+      font-size: 0.9rem;
+      color: #6b7280;
+      margin-bottom: 20px;
+    }
+    .score-tally span { font-weight: 700; color: #7c3aed; }
+
+    /* ── Results screen ── */
+    #results-screen { text-align: center; }
+    .result-emoji { font-size: 5rem; margin-bottom: 16px; }
+    #results-screen h2 { font-size: 2rem; color: #1f2937; margin-bottom: 8px; }
+    .final-score {
+      font-size: 4rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #7c3aed, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 16px 0;
+    }
+    .result-msg { color: #6b7280; font-size: 1.1rem; margin-bottom: 32px; }
+
+    .answers-review { text-align: left; margin-bottom: 28px; }
+    .answers-review h3 { font-size: 1rem; color: #374151; font-weight: 700; margin-bottom: 14px; }
+    .review-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 0.88rem;
+      color: #374151;
+    }
+    .review-item:last-child { border-bottom: none; }
+    .review-icon { flex-shrink: 0; font-size: 1rem; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+<div class="card">
+
+  <!-- Start Screen -->
+  <div id="start-screen">
+    <h1>🧠 Trivia Time!</h1>
+    <p>10 questions · Multiple choice · How well do you know your stuff?</p>
+    <button class="btn btn-primary" onclick="startQuiz()">Let's Go!</button>
+  </div>
+
+  <!-- Quiz Screen -->
+  <div id="quiz-screen" class="hidden">
+    <div class="progress-label">
+      <span id="q-label">Question 1 of 10</span>
+      <span class="score-tally">Score: <span id="score-display">0</span></span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+    </div>
+    <p class="question-text" id="question-text"></p>
+    <div class="choices" id="choices"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()" disabled>Next Question →</button>
+  </div>
+
+  <!-- Results Screen -->
+  <div id="results-screen" class="hidden">
+    <div class="result-emoji" id="result-emoji"></div>
+    <h2 id="result-heading"></h2>
+    <div class="final-score" id="final-score"></div>
+    <p class="result-msg" id="result-msg"></p>
+    <div class="answers-review" id="answers-review"></div>
+    <button class="btn btn-primary" onclick="restartQuiz()">Play Again 🔄</button>
+  </div>
+
+</div>
+
+<script>
+  const questions = [
+    {
+      q: "What is the largest planet in our solar system?",
+      choices: ["Saturn", "Jupiter", "Neptune", "Uranus"],
+      answer: 1
+    },
+    {
+      q: "Which country invented pizza?",
+      choices: ["France", "Greece", "Italy", "Spain"],
+      answer: 2
+    },
+    {
+      q: "How many bones are in the adult human body?",
+      choices: ["196", "206", "216", "226"],
+      answer: 1
+    },
+    {
+      q: "Which element has the chemical symbol 'Au'?",
+      choices: ["Silver", "Aluminum", "Argon", "Gold"],
+      answer: 3
+    },
+    {
+      q: "What year did the Titanic sink?",
+      choices: ["1908", "1912", "1916", "1920"],
+      answer: 1
+    },
+    {
+      q: "Which ocean is the largest?",
+      choices: ["Atlantic", "Indian", "Arctic", "Pacific"],
+      answer: 3
+    },
+    {
+      q: "Who painted the Mona Lisa?",
+      choices: ["Michelangelo", "Raphael", "Leonardo da Vinci", "Caravaggio"],
+      answer: 2
+    },
+    {
+      q: "What is the fastest land animal?",
+      choices: ["Lion", "Cheetah", "Pronghorn", "Greyhound"],
+      answer: 1
+    },
+    {
+      q: "How many sides does a hexagon have?",
+      choices: ["5", "7", "8", "6"],
+      answer: 3
+    },
+    {
+      q: "Which planet is known as the Red Planet?",
+      choices: ["Venus", "Mars", "Jupiter", "Mercury"],
+      answer: 1
+    }
+  ];
+
+  const labels = ['A', 'B', 'C', 'D'];
+  let current = 0;
+  let score = 0;
+  let userAnswers = [];
+
+  function startQuiz() {
+    current = 0;
+    score = 0;
+    userAnswers = [];
+    document.getElementById('start-screen').classList.add('hidden');
+    document.getElementById('quiz-screen').classList.remove('hidden');
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    const q = questions[current];
+    const pct = (current / questions.length) * 100;
+
+    document.getElementById('q-label').textContent = `Question ${current + 1} of ${questions.length}`;
+    document.getElementById('score-display').textContent = score;
+    document.getElementById('progress-bar').style.width = pct + '%';
+    document.getElementById('question-text').textContent = q.q;
+    document.getElementById('feedback').className = 'feedback';
+    document.getElementById('feedback').textContent = '';
+
+    const nextBtn = document.getElementById('next-btn');
+    nextBtn.disabled = true;
+    nextBtn.textContent = current === questions.length - 1 ? 'See Results 🎉' : 'Next Question →';
+
+    const choicesEl = document.getElementById('choices');
+    choicesEl.innerHTML = '';
+    q.choices.forEach((text, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'choice';
+      btn.innerHTML = `<span class="badge">${labels[i]}</span>${text}`;
+      btn.onclick = () => selectAnswer(i);
+      choicesEl.appendChild(btn);
+    });
+  }
+
+  function selectAnswer(selected) {
+    const q = questions[current];
+    const correct = q.answer;
+    const allChoices = document.querySelectorAll('.choice');
+    const feedback = document.getElementById('feedback');
+
+    allChoices.forEach(btn => { btn.disabled = true; });
+
+    if (selected === correct) {
+      allChoices[selected].classList.add('correct');
+      feedback.className = 'feedback correct';
+      feedback.innerHTML = '✅ Correct! Well done!';
+      score++;
+    } else {
+      allChoices[selected].classList.add('wrong');
+      allChoices[correct].classList.add('reveal-correct');
+      feedback.className = 'feedback wrong';
+      feedback.innerHTML = `❌ Not quite! The answer was <strong>${q.choices[correct]}</strong>.`;
+    }
+
+    document.getElementById('score-display').textContent = score;
+    document.getElementById('next-btn').disabled = false;
+
+    userAnswers.push({ question: q.q, selected, correct, choices: q.choices });
+  }
+
+  function nextQuestion() {
+    current++;
+    if (current >= questions.length) {
+      showResults();
+    } else {
+      renderQuestion();
+    }
+  }
+
+  function showResults() {
+    document.getElementById('quiz-screen').classList.add('hidden');
+    document.getElementById('results-screen').classList.remove('hidden');
+
+    const pct = score / questions.length;
+    let emoji, heading, msg;
+    if (pct === 1)        { emoji = '🏆'; heading = 'Perfect Score!';      msg = 'You got every single one right. Incredible!'; }
+    else if (pct >= 0.8)  { emoji = '🌟'; heading = 'Outstanding!';        msg = 'You really know your stuff!'; }
+    else if (pct >= 0.6)  { emoji = '😊'; heading = 'Good Job!';           msg = 'Solid effort — keep it up!'; }
+    else if (pct >= 0.4)  { emoji = '🤔'; heading = 'Not Bad!';            msg = 'A little more studying and you\'ll crush it.'; }
+    else                   { emoji = '📚'; heading = 'Keep Practicing!';    msg = 'Every expert was once a beginner!'; }
+
+    document.getElementById('result-emoji').textContent = emoji;
+    document.getElementById('result-heading').textContent = heading;
+    document.getElementById('final-score').textContent = `${score} / ${questions.length}`;
+    document.getElementById('result-msg').textContent = msg;
+
+    const reviewEl = document.getElementById('answers-review');
+    reviewEl.innerHTML = '<h3>Answer Review</h3>';
+    userAnswers.forEach(({ question, selected, correct, choices }) => {
+      const item = document.createElement('div');
+      item.className = 'review-item';
+      const icon = selected === correct ? '✅' : '❌';
+      item.innerHTML = `
+        <span class="review-icon">${icon}</span>
+        <div>
+          <strong>${question}</strong><br>
+          ${selected !== correct ? `Your answer: <em>${choices[selected]}</em> · ` : ''}
+          Correct: <em>${choices[correct]}</em>
+        </div>`;
+      reviewEl.appendChild(item);
+    });
+  }
+
+  function restartQuiz() {
+    document.getElementById('results-screen').classList.add('hidden');
+    document.getElementById('start-screen').classList.remove('hidden');
+  }
+</script>
+</body>
+</html>
