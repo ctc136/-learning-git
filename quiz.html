@@ -223,13 +223,49 @@
     .review-icon { flex-shrink: 0; font-size: 1rem; }
 
     .hidden { display: none !important; }
+
+    /* ── Login Screen ── */
+    #login-screen { text-align: center; }
+    #login-screen h1 { font-size: 2.4rem; color: #5b21b6; margin-bottom: 8px; }
+    #login-screen p { color: #6b7280; font-size: 1rem; margin-bottom: 28px; }
+    .login-form { display: flex; flex-direction: column; gap: 14px; text-align: left; }
+    .login-form label { font-size: 0.85rem; font-weight: 700; color: #374151; margin-bottom: 2px; display: block; }
+    .login-form input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .login-form input:focus { border-color: #a78bfa; }
+    .login-error { color: #dc2626; font-size: 0.88rem; text-align: center; min-height: 1.2em; }
   </style>
 </head>
 <body>
 <div class="card">
 
+  <!-- Login Screen -->
+  <div id="login-screen">
+    <h1>🔐 Quiz Login</h1>
+    <p>Enter your credentials to access the quiz.</p>
+    <div class="login-form">
+      <div>
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Username" />
+      </div>
+      <div>
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Password" onkeydown="if(event.key==='Enter') login()" />
+      </div>
+      <p class="login-error" id="login-error"></p>
+      <button class="btn btn-primary" onclick="login()">Log In</button>
+    </div>
+  </div>
+
   <!-- Start Screen -->
-  <div id="start-screen">
+  <div id="start-screen" class="hidden">
     <h1>🧠 Trivia Time!</h1>
     <p>10 questions · Multiple choice · How well do you know your stuff?</p>
     <button class="btn btn-primary" onclick="startQuiz()">Let's Go!</button>
@@ -334,6 +370,17 @@
   let current = 0;
   let score = 0;
   let userAnswers = [];
+
+  function login() {
+    const user = document.getElementById('username').value;
+    const pass = document.getElementById('password').value;
+    if (user === 'test' && pass === 'test') {
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('start-screen').classList.remove('hidden');
+    } else {
+      document.getElementById('login-error').textContent = 'Invalid username or password.';
+    }
+  }
 
   function startQuiz() {
     current = 0;
