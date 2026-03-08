@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scratchpad</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      background: #121212;
+      color: #e0e0e0;
+      font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    #editor {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      color: #e0e0e0;
+      font-family: inherit;
+      font-size: 1.1rem;
+      line-height: 1.75;
+      border: none;
+      outline: none;
+      resize: none;
+      padding: 60px max(60px, calc((100vw - 800px) / 2));
+      caret-color: #e0e0e0;
+    }
+
+    #editor::placeholder {
+      color: #3a3a3a;
+    }
+
+    #stats {
+      position: fixed;
+      bottom: 20px;
+      right: 24px;
+      font-size: 0.75rem;
+      color: #444;
+      letter-spacing: 0.04em;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    #lock-screen {
+      position: fixed;
+      inset: 0;
+      background: #121212;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 10;
+    }
+
+    #lock-screen label {
+      font-size: 0.8rem;
+      color: #555;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    #lock-screen input {
+      background: #1e1e1e;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-family: inherit;
+      font-size: 1rem;
+      padding: 10px 16px;
+      width: 220px;
+      outline: none;
+      text-align: center;
+      letter-spacing: 0.1em;
+      transition: border-color 0.2s;
+    }
+
+    #lock-screen input:focus {
+      border-color: #444;
+    }
+
+    #lock-screen input.shake {
+      animation: shake 0.35s ease;
+      border-color: #6b2b2b;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%       { transform: translateX(-8px); }
+      40%       { transform: translateX(8px); }
+      60%       { transform: translateX(-5px); }
+      80%       { transform: translateX(5px); }
+    }
+
+    #lock-screen .hint {
+      font-size: 0.72rem;
+      color: #3a3a3a;
+      min-height: 1em;
+    }
+  </style>
+</head>
+<body>
+  <div id="lock-screen">
+    <label for="password-input">Password</label>
+    <input id="password-input" type="password" autocomplete="current-password" autofocus>
+    <span class="hint" id="hint"></span>
+  </div>
+
+  <textarea id="editor" placeholder="Start writing…" spellcheck="true"></textarea>
+  <div id="stats">0 words &nbsp;·&nbsp; 0 chars</div>
+
+  <script>
+    const editor      = document.getElementById('editor');
+    const stats       = document.getElementById('stats');
+    const lockScreen  = document.getElementById('lock-screen');
+    const pwInput     = document.getElementById('password-input');
+    const hint        = document.getElementById('hint');
+    const KEY         = 'scratchpad-content';
+    const PASSWORD    = 'scratchpad';
+
+    // Check session unlock (tab stays unlocked until closed)
+    if (sessionStorage.getItem('unlocked') === '1') {
+      unlock();
+    }
+
+    pwInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') attemptUnlock();
+    });
+
+    function attemptUnlock() {
+      if (pwInput.value === PASSWORD) {
+        sessionStorage.setItem('unlocked', '1');
+        unlock();
+      } else {
+        hint.textContent = 'Incorrect password';
+        pwInput.value = '';
+        pwInput.classList.remove('shake');
+        void pwInput.offsetWidth; // reflow to restart animation
+        pwInput.classList.add('shake');
+        pwInput.addEventListener('animationend', () => pwInput.classList.remove('shake'), { once: true });
+      }
+    }
+
+    function unlock() {
+      lockScreen.remove();
+      editor.value = localStorage.getItem(KEY) || '';
+      updateStats();
+      editor.focus();
+    }
+
+    editor.addEventListener('input', () => {
+      localStorage.setItem(KEY, editor.value);
+      updateStats();
+    });
+
+    function updateStats() {
+      const text  = editor.value;
+      const chars = text.length;
+      const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+      stats.textContent = `${words.toLocaleString()} ${words === 1 ? 'word' : 'words'} \u00a0·\u00a0 ${chars.toLocaleString()} ${chars === 1 ? 'char' : 'chars'}`;
+    }
+  </script>
+</body>
+</html>
