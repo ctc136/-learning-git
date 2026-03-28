@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OFX>
+  <BANKMSGSRSV1>
+    <STMTTRNRS>
+      <STMTRS>
+        <CURDEF>USD</CURDEF>
+        <BANKTRANLIST>
+          <STMTTRN>
+            <TRNTYPE>DEBIT</TRNTYPE>
+            <DTPOSTED>20260302</DTPOSTED>
+            <TRNAMT>-120.00</TRNAMT>
+            <NAME>Trader Joes</NAME>
+            <MEMO>Grocery Shopping</MEMO>
+          </STMTTRN>
+          <STMTTRN>
+            <TRNTYPE>DEBIT</TRNTYPE>
+            <DTPOSTED>20260304</DTPOSTED>
+            <TRNAMT>-9.99</TRNAMT>
+            <NAME>Apple Music</NAME>
+            <MEMO>Monthly Subscription</MEMO>
+          </STMTTRN>
+          <STMTTRN>
+            <TRNTYPE>CREDIT</TRNTYPE>
+            <DTPOSTED>20260306</DTPOSTED>
+            <TRNAMT>3200.00</TRNAMT>
+            <NAME>Salary Deposit</NAME>
+            <MEMO>March Salary</MEMO>
+          </STMTTRN>
+          <STMTTRN>
+            <TRNTYPE>DEBIT</TRNTYPE>
+            <DTPOSTED>20260308</DTPOSTED>
+            <TRNAMT>-200.00</TRNAMT>
+            <NAME>Gym Membership Annual</NAME>
+            <MEMO>Fitness Center</MEMO>
+          </STMTTRN>
+          <STMTTRN>
+            <TRNTYPE>DEBIT</TRNTYPE>
+            <DTPOSTED>20260311</DTPOSTED>
+            <TRNAMT>-55.40</TRNAMT>
+            <NAME>Cheesecake Factory</NAME>
+            <MEMO>Restaurant Dining</MEMO>
+          </STMTTRN>
+          <STMTTRN>
+            <TRNTYPE>DEBIT</TRNTYPE>
+            <DTPOSTED>20260313</DTPOSTED>
+            <TRNAMT>-78.99</TRNAMT>
+            <NAME>Amazon Prime</NAME>
+            <MEMO>Annual Membership</MEMO>
+          </STMTTRN>
+        </BANKTRANLIST>
+      </STMTRS>
+    </STMTTRNRS>
+  </BANKMSGSRSV1>
+</OFX>

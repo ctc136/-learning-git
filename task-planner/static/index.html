@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Planner</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f1f2f6;
+            --surface: #ffffff;
+            --surface-hover: #f8f9fb;
+            --border: #e2e5ea;
+            --text: #1a1d26;
+            --text-dim: #6b7280;
+            --primary: #4f6ef7;
+            --primary-light: #eef1fe;
+            --green: #10b981;
+            --green-light: #ecfdf5;
+            --amber: #f59e0b;
+            --amber-light: #fffbeb;
+            --red: #ef4444;
+            --red-light: #fef2f2;
+            --purple: #8b5cf6;
+            --purple-light: #f5f3ff;
+            --column-bg: #f4f5f8;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-lg: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ---- Header ---- */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow);
+            z-index: 10;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .header h1 { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .header h1 span { font-size: 22px; }
+        .board-name { font-size: 15px; color: var(--text-dim); font-weight: 400; padding: 6px 12px; background: var(--bg); border-radius: 6px; }
+
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .user-badge { font-size: 13px; color: var(--text-dim); }
+
+        .btn {
+            padding: 8px 16px; border-radius: 8px; border: none;
+            font-family: 'DM Sans', sans-serif; font-size: 13px;
+            font-weight: 500; cursor: pointer; transition: all 0.15s;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-ghost { background: transparent; color: var(--text-dim); }
+        .btn-ghost:hover { background: var(--bg); color: var(--text); }
+        .btn-danger { background: var(--red); color: white; }
+        .btn-danger:hover { opacity: 0.9; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+        /* ---- Auth Screen ---- */
+        .auth-screen {
+            display: flex; align-items: center; justify-content: center;
+            height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .auth-card {
+            background: white; border-radius: 16px; padding: 40px;
+            width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+
+        .auth-card h2 { font-size: 24px; margin-bottom: 8px; text-align: center; }
+        .auth-card .subtitle { color: var(--text-dim); text-align: center; margin-bottom: 28px; font-size: 14px; }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: var(--text-dim); }
+
+        .form-input {
+            width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+            border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px;
+            outline: none; transition: border-color 0.2s;
+        }
+        .form-input:focus { border-color: var(--primary); }
+
+        .auth-btn {
+            width: 100%; padding: 12px; border-radius: 8px; border: none;
+            background: var(--primary); color: white; font-family: 'DM Sans', sans-serif;
+            font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 8px;
+        }
+        .auth-btn:hover { opacity: 0.9; }
+
+        .auth-toggle { text-align: center; margin-top: 20px; font-size: 13px; color: var(--text-dim); }
+        .auth-toggle a { color: var(--primary); cursor: pointer; text-decoration: none; font-weight: 500; }
+        .auth-error { color: var(--red); font-size: 13px; text-align: center; margin-top: 12px; }
+
+        /* ---- Board ---- */
+        .board-area {
+            flex: 1; display: flex; overflow-x: auto; padding: 20px;
+            gap: 16px; align-items: flex-start;
+        }
+
+        .column {
+            background: var(--column-bg); border-radius: 12px; min-width: 300px;
+            max-width: 300px; display: flex; flex-direction: column;
+            max-height: calc(100vh - 90px);
+        }
+
+        .column-header {
+            padding: 14px 16px 10px; display: flex; align-items: center;
+            justify-content: space-between;
+        }
+
+        .column-title {
+            font-size: 13px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.5px; color: var(--text-dim);
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .column-count {
+            background: var(--border); border-radius: 10px; padding: 1px 8px;
+            font-size: 12px; font-weight: 500;
+        }
+
+        .column-actions { display: flex; gap: 4px; }
+
+        .icon-btn {
+            width: 28px; height: 28px; border-radius: 6px; border: none;
+            background: transparent; color: var(--text-dim); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; transition: all 0.15s;
+        }
+        .icon-btn:hover { background: var(--border); color: var(--text); }
+
+        .column-cards {
+            padding: 0 12px 12px; flex: 1; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+
+        /* ---- Cards ---- */
+        .card {
+            background: var(--surface); border-radius: 10px; padding: 14px;
+            box-shadow: var(--shadow); cursor: pointer; transition: all 0.15s;
+            border: 1px solid transparent;
+        }
+        .card:hover { box-shadow: var(--shadow-lg); border-color: var(--primary); }
+        .card.dragging { opacity: 0.5; transform: rotate(2deg); }
+
+        .card-title { font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+
+        .card-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+        .card-badge {
+            padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500;
+        }
+
+        .priority-high { background: var(--red-light); color: var(--red); }
+        .priority-medium { background: var(--amber-light); color: var(--amber); }
+        .priority-low { background: var(--green-light); color: var(--green); }
+
+        .category-badge { background: var(--purple-light); color: var(--purple); }
+
+        .due-badge { background: var(--bg); color: var(--text-dim); font-size: 11px;
+            padding: 2px 8px; border-radius: 4px; }
+        .due-badge.overdue { background: var(--red-light); color: var(--red); }
+
+        .card-desc { font-size: 12px; color: var(--text-dim); margin-top: 6px;
+            line-height: 1.4; }
+
+        /* ---- Add card form ---- */
+        .add-card-btn {
+            padding: 8px 12px; border: none; background: transparent;
+            color: var(--text-dim); font-family: 'DM Sans', sans-serif;
+            font-size: 13px; cursor: pointer; border-radius: 8px;
+            text-align: left; transition: all 0.15s; margin: 0 12px 12px;
+        }
+        .add-card-btn:hover { background: var(--border); color: var(--text); }
+
+        .add-card-form {
+            padding: 0 12px 12px; display: none; flex-direction: column; gap: 8px;
+        }
+        .add-card-form.active { display: flex; }
+
+        .add-card-form input, .add-card-form select, .add-card-form textarea {
+            padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px;
+            font-family: 'DM Sans', sans-serif; font-size: 13px; outline: none;
+        }
+        .add-card-form input:focus, .add-card-form select:focus, .add-card-form textarea:focus {
+            border-color: var(--primary);
+        }
+        .add-card-form textarea { resize: vertical; min-height: 60px; }
+
+        .form-row { display: flex; gap: 8px; }
+        .form-row > * { flex: 1; }
+
+        /* ---- Add column ---- */
+        .add-column {
+            min-width: 300px; max-width: 300px; background: rgba(0,0,0,0.04);
+            border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px;
+        }
+
+        .add-column-btn {
+            padding: 12px; border: 2px dashed var(--border); border-radius: 8px;
+            background: transparent; color: var(--text-dim); font-family: 'DM Sans', sans-serif;
+            font-size: 14px; cursor: pointer; transition: all 0.15s;
+        }
+        .add-column-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* ---- Modal ---- */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4); z-index: 100; align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: white; border-radius: 12px; padding: 28px;
+            width: 450px; max-height: 90vh; overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .modal h3 { font-size: 18px; margin-bottom: 20px; }
+
+        .modal .form-group { margin-bottom: 14px; }
+        .modal .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+        /* ---- Board Picker ---- */
+        .board-picker {
+            display: none; position: absolute; top: 50px; left: 24px;
+            background: white; border-radius: 12px; padding: 12px;
+            box-shadow: var(--shadow-lg); border: 1px solid var(--border);
+            z-index: 20; min-width: 240px;
+        }
+        .board-picker.active { display: block; }
+
+        .board-picker-item {
+            padding: 10px 14px; border-radius: 8px; cursor: pointer;
+            font-size: 14px; transition: background 0.15s; display: flex;
+            justify-content: space-between; align-items: center;
+        }
+        .board-picker-item:hover { background: var(--bg); }
+        .board-picker-item.active { background: var(--primary-light); color: var(--primary); font-weight: 500; }
+
+        .board-picker-new {
+            padding: 10px 14px; border-top: 1px solid var(--border);
+            margin-top: 8px; padding-top: 12px;
+        }
+
+        /* Scrollbar */
+        .column-cards::-webkit-scrollbar { width: 4px; }
+        .column-cards::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        .board-area::-webkit-scrollbar { height: 6px; }
+        .board-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        /* Drag & drop visual */
+        .drop-target { border: 2px dashed var(--primary); background: var(--primary-light); border-radius: 8px; min-height: 60px; }
+    </style>
+</head>
+<body>
+
+<!-- Auth Screen -->
+<div id="authScreen" class="auth-screen">
+    <div class="auth-card">
+        <h2>📋 Task Planner</h2>
+        <p class="subtitle" id="authSubtitle">Sign in to your boards</p>
+
+        <div class="form-group">
+            <label>Username</label>
+            <input type="text" class="form-input" id="authUsername" placeholder="Enter username">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" class="form-input" id="authPassword" placeholder="Enter password"
+                   onkeydown="if(event.key==='Enter')handleAuth()">
+        </div>
+
+        <button class="auth-btn" id="authBtn" onclick="handleAuth()">Sign In</button>
+        <div class="auth-error" id="authError"></div>
+        <div class="auth-toggle">
+            <span id="authToggleText">Don't have an account?</span>
+            <a id="authToggleLink" onclick="toggleAuthMode()">Create one</a>
+        </div>
+    </div>
+</div>
+
+<!-- Main App -->
+<div id="appScreen" style="display:none; flex-direction:column; height:100vh;">
+    <div class="header">
+        <div class="header-left">
+            <h1><span>📋</span> Task Planner</h1>
+            <button class="board-name" id="boardNameBtn" onclick="toggleBoardPicker()">Loading...</button>
+            <div class="board-picker" id="boardPicker"></div>
+        </div>
+        <div class="header-right">
+            <span class="user-badge" id="userBadge"></span>
+            <button class="btn btn-ghost btn-sm" onclick="logout()">Log out</button>
+        </div>
+    </div>
+
+    <div class="board-area" id="boardArea"></div>
+</div>
+
+<!-- Edit Card Modal -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal">
+        <h3>Edit Card</h3>
+        <div class="form-group">
+            <label>Title</label>
+            <input type="text" class="form-input" id="editTitle">
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea class="form-input" id="editDesc" rows="3"></textarea>
+        </div>
+        <div style="display:flex; gap:12px;">
+            <div class="form-group" style="flex:1">
+                <label>Priority</label>
+                <select class="form-input" id="editPriority">
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                </select>
+            </div>
+            <div class="form-group" style="flex:1">
+                <label>Category</label>
+                <input type="text" class="form-input" id="editCategory" placeholder="e.g. Design, Dev">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Due Date</label>
+            <input type="date" class="form-input" id="editDue">
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-danger btn-sm" id="editDeleteBtn">Delete</button>
+            <button class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+            <button class="btn btn-primary" id="editSaveBtn">Save</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------------------------------------------------------------------------
+    // State
+    // ---------------------------------------------------------------------------
+    let token = localStorage.getItem('token');
+    let username = localStorage.getItem('username');
+    let currentBoardId = null;
+    let boardData = null;
+    let isRegister = false;
+    let draggedCard = null;
+
+    // ---------------------------------------------------------------------------
+    // API helper
+    // ---------------------------------------------------------------------------
+    async function api(method, path, body = null) {
+        const opts = {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+        };
+        if (token) opts.headers['Authorization'] = `Bearer ${token}`;
+        if (body) opts.body = JSON.stringify(body);
+
+        const res = await fetch(path, opts);
+        if (res.status === 401) { logout(); throw new Error('Session expired'); }
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.detail || 'Request failed');
+        }
+        return res.json();
+    }
+
+    // ---------------------------------------------------------------------------
+    // Auth
+    // ---------------------------------------------------------------------------
+    function toggleAuthMode() {
+        isRegister = !isRegister;
+        document.getElementById('authBtn').textContent = isRegister ? 'Create Account' : 'Sign In';
+        document.getElementById('authSubtitle').textContent = isRegister ? 'Create your account' : 'Sign in to your boards';
+        document.getElementById('authToggleText').textContent = isRegister ? 'Already have an account?' : "Don't have an account?";
+        document.getElementById('authToggleLink').textContent = isRegister ? 'Sign in' : 'Create one';
+        document.getElementById('authError').textContent = '';
+    }
+
+    async function handleAuth() {
+        const user = document.getElementById('authUsername').value.trim();
+        const pass = document.getElementById('authPassword').value;
+
+        if (!user || !pass) {
+            document.getElementById('authError').textContent = 'Please fill in both fields';
+            return;
+        }
+
+        try {
+            const endpoint = isRegister ? '/api/register' : '/api/login';
+            const data = await api('POST', endpoint, { username: user, password: pass });
+            token = data.token;
+            username = data.username;
+            localStorage.setItem('token', token);
+            localStorage.setItem('username', username);
+            showApp();
+        } catch (err) {
+            document.getElementById('authError').textContent = err.message;
+        }
+    }
+
+    function logout() {
+        token = null;
+        username = null;
+        localStorage.removeItem('token');
+        localStorage.removeItem('username');
+        document.getElementById('authScreen').style.display = 'flex';
+        document.getElementById('appScreen').style.display = 'none';
+    }
+
+    // ---------------------------------------------------------------------------
+    // App init
+    // ---------------------------------------------------------------------------
+    async function showApp() {
+        document.getElementById('authScreen').style.display = 'none';
+        document.getElementById('appScreen').style.display = 'flex';
+        document.getElementById('userBadge').textContent = `👤 ${username}`;
+
+        const boards = await api('GET', '/api/boards');
+        if (boards.length > 0) {
+            currentBoardId = boards[0].id;
+            await loadBoard();
+        }
+    }
+
+    async function loadBoard() {
+        boardData = await api('GET', `/api/boards/${currentBoardId}`);
+        document.getElementById('boardNameBtn').textContent = `📌 ${boardData.name}`;
+        renderBoard();
+    }
+
+    // ---------------------------------------------------------------------------
+    // Board picker
+    // ---------------------------------------------------------------------------
+    function toggleBoardPicker() {
+        const picker = document.getElementById('boardPicker');
+        if (picker.classList.contains('active')) {
+            picker.classList.remove('active');
+            return;
+        }
+        renderBoardPicker();
+        picker.classList.add('active');
+    }
+
+    async function renderBoardPicker() {
+        const boards = await api('GET', '/api/boards');
+        const picker = document.getElementById('boardPicker');
+        picker.innerHTML = boards.map(b => `
+            <div class="board-picker-item ${b.id === currentBoardId ? 'active' : ''}"
+                 onclick="switchBoard(${b.id})">
+                ${b.name}
+            </div>
+        `).join('') + `
+            <div class="board-picker-new">
+                <input type="text" class="form-input" id="newBoardInput" placeholder="New board name..."
+                       onkeydown="if(event.key==='Enter')createNewBoard()" style="font-size:13px;">
+            </div>
+        `;
+    }
+
+    async function switchBoard(boardId) {
+        currentBoardId = boardId;
+        document.getElementById('boardPicker').classList.remove('active');
+        await loadBoard();
+    }
+
+    async function createNewBoard() {
+        const input = document.getElementById('newBoardInput');
+        const name = input.value.trim();
+        if (!name) return;
+        const board = await api('POST', '/api/boards', { name });
+        currentBoardId = board.id;
+        document.getElementById('boardPicker').classList.remove('active');
+        await loadBoard();
+    }
+
+    // ---------------------------------------------------------------------------
+    // Render board
+    // ---------------------------------------------------------------------------
+    function renderBoard() {
+        const area = document.getElementById('boardArea');
+        area.innerHTML = '';
+
+        for (const col of boardData.columns) {
+            area.appendChild(createColumnEl(col));
+        }
+
+        // Add column button
+        const addCol = document.createElement('div');
+        addCol.className = 'add-column';
+        addCol.innerHTML = `
+            <button class="add-column-btn" onclick="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                + Add Column
+            </button>
+            <div style="display:none; gap:8px;">
+                <input type="text" class="form-input" placeholder="Column name..."
+                       style="font-size:13px;" id="newColInput"
+                       onkeydown="if(event.key==='Enter')addColumn()">
+                <div style="display:flex; gap:6px;">
+                    <button class="btn btn-primary btn-sm" onclick="addColumn()">Add</button>
+                    <button class="btn btn-ghost btn-sm" onclick="loadBoard()">Cancel</button>
+                </div>
+            </div>
+        `;
+        area.appendChild(addCol);
+    }
+
+    function createColumnEl(col) {
+        const div = document.createElement('div');
+        div.className = 'column';
+        div.dataset.columnId = col.id;
+
+        div.innerHTML = `
+            <div class="column-header">
+                <div class="column-title">
+                    ${col.name}
+                    <span class="column-count">${col.cards.length}</span>
+                </div>
+                <div class="column-actions">
+                    <button class="icon-btn" onclick="deleteColumn(${col.id})" title="Delete column">×</button>
+                </div>
+            </div>
+            <div class="column-cards" data-column-id="${col.id}"
+                 ondragover="handleDragOver(event)" ondrop="handleDrop(event, ${col.id})">
+                ${col.cards.map(card => createCardHTML(card)).join('')}
+            </div>
+            <button class="add-card-btn" onclick="showAddForm(${col.id})">+ Add card</button>
+            <div class="add-card-form" id="addForm-${col.id}">
+                <input type="text" placeholder="Card title..." id="newTitle-${col.id}"
+                       onkeydown="if(event.key==='Enter')quickAddCard(${col.id})">
+                <div class="form-row">
+                    <select id="newPriority-${col.id}">
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                        <option value="high">High</option>
+                    </select>
+                    <input type="text" placeholder="Category" id="newCategory-${col.id}">
+                </div>
+                <input type="date" id="newDue-${col.id}">
+                <div style="display:flex; gap:6px;">
+                    <button class="btn btn-primary btn-sm" onclick="addCard(${col.id})">Add</button>
+                    <button class="btn btn-ghost btn-sm" onclick="hideAddForm(${col.id})">Cancel</button>
+                </div>
+            </div>
+        `;
+        return div;
+    }
+
+    function createCardHTML(card) {
+        const priorityClass = `priority-${card.priority}`;
+        let dueBadge = '';
+        if (card.due_date) {
+            const isOverdue = new Date(card.due_date) < new Date() && card.priority !== 'done';
+            dueBadge = `<span class="card-badge due-badge ${isOverdue ? 'overdue' : ''}">📅 ${card.due_date}</span>`;
+        }
+
+        let categoryBadge = '';
+        if (card.category) {
+            categoryBadge = `<span class="card-badge category-badge">${card.category}</span>`;
+        }
+
+        return `
+            <div class="card" draggable="true" data-card-id="${card.id}"
+                 ondragstart="handleDragStart(event, ${card.id})"
+                 ondragend="handleDragEnd(event)"
+                 onclick="openEditModal(${card.id})">
+                <div class="card-title">${card.title}</div>
+                <div class="card-meta">
+                    <span class="card-badge ${priorityClass}">${card.priority}</span>
+                    ${categoryBadge}
+                    ${dueBadge}
+                </div>
+                ${card.description ? `<div class="card-desc">${card.description.substring(0, 100)}${card.description.length > 100 ? '...' : ''}</div>` : ''}
+            </div>
+        `;
+    }
+
+    // ---------------------------------------------------------------------------
+    // Card actions
+    // ---------------------------------------------------------------------------
+    function showAddForm(colId) {
+        document.getElementById(`addForm-${colId}`).classList.add('active');
+        document.getElementById(`newTitle-${colId}`).focus();
+    }
+
+    function hideAddForm(colId) {
+        document.getElementById(`addForm-${colId}`).classList.remove('active');
+    }
+
+    function quickAddCard(colId) { addCard(colId); }
+
+    async function addCard(colId) {
+        const title = document.getElementById(`newTitle-${colId}`).value.trim();
+        if (!title) return;
+
+        const priority = document.getElementById(`newPriority-${colId}`).value;
+        const category = document.getElementById(`newCategory-${colId}`).value.trim();
+        const due_date = document.getElementById(`newDue-${colId}`).value || null;
+
+        await api('POST', `/api/columns/${colId}/cards`, { title, priority, category, due_date });
+        await loadBoard();
+    }
+
+    async function addColumn() {
+        const input = document.getElementById('newColInput');
+        const name = input.value.trim();
+        if (!name) return;
+        await api('POST', `/api/boards/${currentBoardId}/columns`, { name });
+        await loadBoard();
+    }
+
+    async function deleteColumn(colId) {
+        if (!confirm('Delete this column and all its cards?')) return;
+        await api('DELETE', `/api/columns/${colId}`);
+        await loadBoard();
+    }
+
+    // ---------------------------------------------------------------------------
+    // Edit modal
+    // ---------------------------------------------------------------------------
+    let editingCardId = null;
+
+    function openEditModal(cardId) {
+        editingCardId = cardId;
+        // Find card in board data
+        let card = null;
+        for (const col of boardData.columns) {
+            card = col.cards.find(c => c.id === cardId);
+            if (card) break;
+        }
+        if (!card) return;
+
+        document.getElementById('editTitle').value = card.title;
+        document.getElementById('editDesc').value = card.description || '';
+        document.getElementById('editPriority').value = card.priority;
+        document.getElementById('editCategory').value = card.category || '';
+        document.getElementById('editDue').value = card.due_date || '';
+
+        document.getElementById('editSaveBtn').onclick = saveCard;
+        document.getElementById('editDeleteBtn').onclick = () => deleteCard(cardId);
+        document.getElementById('editModal').classList.add('active');
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').classList.remove('active');
+        editingCardId = null;
+    }
+
+    async function saveCard() {
+        const data = {
+            title: document.getElementById('editTitle').value.trim(),
+            description: document.getElementById('editDesc').value.trim(),
+            priority: document.getElementById('editPriority').value,
+            category: document.getElementById('editCategory').value.trim(),
+            due_date: document.getElementById('editDue').value || null,
+        };
+        await api('PUT', `/api/cards/${editingCardId}`, data);
+        closeEditModal();
+        await loadBoard();
+    }
+
+    async function deleteCard(cardId) {
+        await api('DELETE', `/api/cards/${cardId}`);
+        closeEditModal();
+        await loadBoard();
+    }
+
+    // ---------------------------------------------------------------------------
+    // Drag and drop
+    // ---------------------------------------------------------------------------
+    function handleDragStart(event, cardId) {
+        draggedCard = cardId;
+        event.target.classList.add('dragging');
+        event.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragEnd(event) {
+        event.target.classList.remove('dragging');
+        document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
+    }
+
+    function handleDragOver(event) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        const container = event.currentTarget;
+        container.classList.add('drop-target');
+    }
+
+    async function handleDrop(event, columnId) {
+        event.preventDefault();
+        event.currentTarget.classList.remove('drop-target');
+        if (!draggedCard) return;
+
+        await api('PUT', `/api/cards/${draggedCard}/move`, {
+            column_id: columnId,
+            position: 0,
+        });
+        draggedCard = null;
+        await loadBoard();
+    }
+
+    // Close modal/picker when clicking outside
+    document.addEventListener('click', (e) => {
+        const picker = document.getElementById('boardPicker');
+        const pickerBtn = document.getElementById('boardNameBtn');
+        if (picker.classList.contains('active') && !picker.contains(e.target) && e.target !== pickerBtn) {
+            picker.classList.remove('active');
+        }
+
+        const modal = document.getElementById('editModal');
+        if (e.target === modal) closeEditModal();
+    });
+
+    // ---------------------------------------------------------------------------
+    // Init
+    // ---------------------------------------------------------------------------
+    if (token) {
+        showApp();
+    }
+</script>
+</body>
+</html>

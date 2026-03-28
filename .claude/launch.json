@@ -1,0 +1,29 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "finance-frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "finance-app/frontend"],
+      "port": 5173
+    },
+    {
+      "name": "finance-backend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "finance-app/backend"],
+      "port": 3001
+    },
+    {
+      "name": "park-planner",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["park-planner/app.py"],
+      "port": 8000
+    },
+    {
+      "name": "recipe-api",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "src.main"],
+      "port": 8000
+    }
+  ]
+}

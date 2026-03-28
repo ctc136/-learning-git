@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git init:*)"
+      "Bash(git init:*)",
+      "mcp__hevy-mcp-server__get-workouts"
     ]
   }
 }

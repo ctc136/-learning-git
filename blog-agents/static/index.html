@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Agent Pipeline</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0c0c10;
+            --surface: #16161d;
+            --surface-2: #1e1e28;
+            --border: #2a2a38;
+            --text: #e8e6f0;
+            --text-dim: #7c7a8a;
+            --purple: #a78bfa;
+            --purple-dim: rgba(167, 139, 250, 0.12);
+            --green: #34d399;
+            --green-dim: rgba(52, 211, 153, 0.12);
+            --amber: #fbbf24;
+            --amber-dim: rgba(251, 191, 36, 0.12);
+            --blue: #60a5fa;
+            --blue-dim: rgba(96, 165, 250, 0.12);
+            --pink: #f472b6;
+            --red: #f87171;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .header {
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header h1 { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .header-right { display: flex; gap: 8px; }
+
+        .tab-btn {
+            padding: 8px 18px; border-radius: 8px; border: 1px solid var(--border);
+            background: transparent; color: var(--text-dim); font-family: 'Space Grotesk', sans-serif;
+            font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s;
+        }
+        .tab-btn:hover { background: var(--surface-2); color: var(--text); }
+        .tab-btn.active { background: var(--purple-dim); color: var(--purple); border-color: var(--purple); }
+
+        .main { max-width: 1000px; margin: 0 auto; padding: 32px 20px; }
+
+        /* Input area */
+        .input-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 16px; padding: 28px; margin-bottom: 28px;
+        }
+
+        .input-label { font-size: 14px; color: var(--text-dim); margin-bottom: 12px; font-weight: 500; }
+
+        .input-row { display: flex; gap: 12px; }
+
+        .topic-input {
+            flex: 1; padding: 14px 18px; background: var(--bg);
+            border: 1px solid var(--border); border-radius: 10px; color: var(--text);
+            font-family: 'Space Grotesk', sans-serif; font-size: 15px; outline: none;
+        }
+        .topic-input:focus { border-color: var(--purple); }
+        .topic-input::placeholder { color: var(--text-dim); }
+
+        .run-btn {
+            padding: 14px 28px; background: linear-gradient(135deg, var(--purple), #8b5cf6);
+            color: white; border: none; border-radius: 10px;
+            font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600;
+            cursor: pointer; transition: all 0.15s; white-space: nowrap;
+        }
+        .run-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(167, 139, 250, 0.3); }
+        .run-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .suggestions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+
+        .suggestion {
+            padding: 6px 14px; background: var(--surface-2); border: 1px solid var(--border);
+            border-radius: 20px; font-size: 12px; color: var(--text-dim); cursor: pointer; transition: all 0.15s;
+        }
+        .suggestion:hover { border-color: var(--purple); color: var(--purple); }
+
+        /* Pipeline */
+        .pipeline { display: flex; gap: 4px; align-items: center; margin-bottom: 28px; }
+
+        .pipeline-step {
+            flex: 1; background: var(--surface); border: 1px solid var(--border);
+            border-radius: 12px; padding: 14px; text-align: center; transition: all 0.3s;
+        }
+        .pipeline-step.active { border-color: var(--purple); background: var(--purple-dim); }
+        .pipeline-step.done { border-color: var(--green); background: var(--green-dim); }
+
+        .pipeline-emoji { font-size: 24px; margin-bottom: 4px; }
+        .pipeline-name { font-size: 12px; font-weight: 600; }
+        .pipeline-arrow { font-size: 18px; color: var(--text-dim); flex-shrink: 0; }
+
+        .pipeline-step .spinner {
+            display: none; width: 16px; height: 16px; border: 2px solid var(--border);
+            border-top-color: var(--purple); border-radius: 50%;
+            animation: spin 0.8s linear infinite; margin: 4px auto 0;
+        }
+        .pipeline-step.active .spinner { display: block; }
+        .pipeline-step .checkmark { display: none; color: var(--green); font-size: 16px; margin-top: 4px; }
+        .pipeline-step.done .checkmark { display: block; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Agent outputs */
+        .agent-outputs { display: flex; flex-direction: column; gap: 16px; }
+
+        .agent-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 14px; overflow: hidden; transition: all 0.3s;
+        }
+
+        .agent-header {
+            padding: 16px 20px; display: flex; align-items: center; gap: 12px;
+            cursor: pointer; transition: background 0.15s;
+        }
+        .agent-header:hover { background: var(--surface-2); }
+
+        .agent-emoji { font-size: 24px; }
+        .agent-info { flex: 1; }
+        .agent-name { font-size: 15px; font-weight: 600; }
+        .agent-desc { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+
+        .agent-status { font-size: 12px; padding: 4px 12px; border-radius: 20px; font-weight: 500; }
+        .agent-status.waiting { background: var(--surface-2); color: var(--text-dim); }
+        .agent-status.running { background: var(--amber-dim); color: var(--amber); }
+        .agent-status.done { background: var(--green-dim); color: var(--green); }
+
+        .agent-toggle { font-size: 18px; color: var(--text-dim); transition: transform 0.2s; }
+        .agent-card.expanded .agent-toggle { transform: rotate(180deg); }
+
+        .agent-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+        .agent-card.expanded .agent-body { max-height: 3000px; }
+
+        .agent-content {
+            padding: 0 20px 20px; font-family: 'Newsreader', serif; font-size: 15px;
+            line-height: 1.8; color: #c8c6d4; white-space: pre-wrap;
+            border-top: 1px solid var(--border); padding-top: 16px;
+        }
+
+        /* Final post */
+        .final-card {
+            background: var(--surface); border: 2px solid var(--purple);
+            border-radius: 14px; padding: 32px; margin-top: 8px;
+        }
+
+        .final-label {
+            font-size: 12px; text-transform: uppercase; letter-spacing: 1px;
+            color: var(--purple); font-weight: 600; margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .final-content {
+            font-family: 'Newsreader', serif; font-size: 16px; line-height: 1.9;
+            color: #d8d6e4; white-space: pre-wrap;
+        }
+
+        .btn-row { display: flex; gap: 8px; }
+
+        .action-btn {
+            padding: 8px 18px; background: var(--surface-2); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text-dim); font-family: 'Space Grotesk', sans-serif;
+            font-size: 13px; cursor: pointer; transition: all 0.15s;
+        }
+        .action-btn:hover { background: var(--purple-dim); color: var(--purple); border-color: var(--purple); }
+        .action-btn.save-btn:hover { background: var(--green-dim); color: var(--green); border-color: var(--green); }
+        .action-btn.delete-btn:hover { background: rgba(248,113,113,0.12); color: var(--red); border-color: var(--red); }
+
+        /* Saved blogs list */
+        .saved-list { display: flex; flex-direction: column; gap: 12px; }
+
+        .saved-item {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+            padding: 18px 20px; cursor: pointer; transition: all 0.15s;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .saved-item:hover { border-color: var(--purple); background: var(--purple-dim); }
+
+        .saved-topic { font-size: 15px; font-weight: 500; }
+        .saved-date { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+        .saved-actions { display: flex; gap: 8px; }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-dim); }
+        .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+        .empty-state h3 { font-size: 18px; margin-bottom: 8px; color: var(--text); }
+        .empty-state p { font-size: 14px; line-height: 1.6; }
+
+        /* Status toast */
+        .toast {
+            position: fixed; bottom: 20px; right: 20px; padding: 12px 20px;
+            border-radius: 10px; font-size: 13px; font-weight: 500;
+            transform: translateY(100px); transition: transform 0.3s; z-index: 50;
+            background: var(--green-dim); color: var(--green); border: 1px solid var(--green);
+        }
+        .toast.visible { transform: translateY(0); }
+        .toast.error { background: rgba(248,113,113,0.12); color: var(--red); border-color: var(--red); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📝 Blog Agent Pipeline</h1>
+        <div class="header-right">
+            <button class="tab-btn active" id="tabCreate" onclick="showView('create')">Create</button>
+            <button class="tab-btn" id="tabSaved" onclick="showView('saved')">Saved Posts</button>
+        </div>
+    </div>
+
+    <div class="main">
+
+        <!-- CREATE VIEW -->
+        <div id="createView">
+            <div class="input-card">
+                <div class="input-label">What should the blog post be about?</div>
+                <div class="input-row">
+                    <input type="text" class="topic-input" id="topicInput"
+                           placeholder="e.g. Why everyone should try rock climbing"
+                           onkeydown="if(event.key==='Enter')runPipeline()">
+                    <button class="run-btn" id="runBtn" onclick="runPipeline()">Run Pipeline →</button>
+                </div>
+                <div class="suggestions">
+                    <span class="suggestion" onclick="quickTopic(this)">Why remote work is here to stay</span>
+                    <span class="suggestion" onclick="quickTopic(this)">The hidden benefits of reading fiction</span>
+                    <span class="suggestion" onclick="quickTopic(this)">How to start investing in your 20s</span>
+                    <span class="suggestion" onclick="quickTopic(this)">The science of better sleep</span>
+                </div>
+            </div>
+
+            <div class="pipeline" id="pipeline" style="display:none;">
+                <div class="pipeline-step" id="pipe-0">
+                    <div class="pipeline-emoji">🔍</div>
+                    <div class="pipeline-name">Research</div>
+                    <div class="spinner"></div>
+                    <div class="checkmark">✓</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step" id="pipe-1">
+                    <div class="pipeline-emoji">📋</div>
+                    <div class="pipeline-name">Outline</div>
+                    <div class="spinner"></div>
+                    <div class="checkmark">✓</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step" id="pipe-2">
+                    <div class="pipeline-emoji">✍️</div>
+                    <div class="pipeline-name">Write</div>
+                    <div class="spinner"></div>
+                    <div class="checkmark">✓</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step" id="pipe-3">
+                    <div class="pipeline-emoji">✨</div>
+                    <div class="pipeline-name">Edit</div>
+                    <div class="spinner"></div>
+                    <div class="checkmark">✓</div>
+                </div>
+            </div>
+
+            <div class="agent-outputs" id="agentOutputs">
+                <div class="empty-state">
+                    <div class="icon">🤖</div>
+                    <h3>Ready to write</h3>
+                    <p>Enter a topic above and four AI agents will collaborate<br>to research, outline, write, and edit a blog post for you.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SAVED VIEW -->
+        <div id="savedView" style="display:none;">
+            <div class="saved-list" id="savedList">
+                <div class="empty-state">
+                    <div class="icon">📚</div>
+                    <h3>No saved posts yet</h3>
+                    <p>Create a blog post and click "Save" to store it here.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW SINGLE POST -->
+        <div id="viewPost" style="display:none;">
+            <div style="margin-bottom: 16px;">
+                <button class="action-btn" onclick="showView('saved')">← Back to saved posts</button>
+            </div>
+            <div id="viewPostContent"></div>
+        </div>
+
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const agentDescriptions = [
+            "Gathers key points, facts, and angles on the topic",
+            "Creates a structured outline from the research",
+            "Writes the full blog post from the outline",
+            "Reviews and polishes the draft",
+        ];
+
+        // Track agent outputs for saving
+        let currentTopic = '';
+        let currentAgentOutputs = ['', '', '', ''];
+        let currentFinalPost = '';
+
+        // ---------------------------------------------------------------------------
+        // Views
+        // ---------------------------------------------------------------------------
+        function showView(view) {
+            document.getElementById('createView').style.display = view === 'create' ? 'block' : 'none';
+            document.getElementById('savedView').style.display = view === 'saved' ? 'block' : 'none';
+            document.getElementById('viewPost').style.display = view === 'viewpost' ? 'block' : 'none';
+
+            document.getElementById('tabCreate').classList.toggle('active', view === 'create');
+            document.getElementById('tabSaved').classList.toggle('active', view === 'saved' || view === 'viewpost');
+
+            if (view === 'saved') loadSavedBlogs();
+        }
+
+        // ---------------------------------------------------------------------------
+        // Pipeline
+        // ---------------------------------------------------------------------------
+        function quickTopic(el) {
+            document.getElementById('topicInput').value = el.textContent;
+            runPipeline();
+        }
+
+        function toggleAgent(index) {
+            const card = document.getElementById(`agent-${index}`);
+            if (card) card.classList.toggle('expanded');
+        }
+
+        async function runPipeline() {
+            const topic = document.getElementById('topicInput').value.trim();
+            if (!topic) return;
+
+            currentTopic = topic;
+            currentAgentOutputs = ['', '', '', ''];
+            currentFinalPost = '';
+
+            const runBtn = document.getElementById('runBtn');
+            runBtn.disabled = true;
+            runBtn.textContent = 'Running...';
+
+            const pipeline = document.getElementById('pipeline');
+            pipeline.style.display = 'flex';
+
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`pipe-${i}`).className = 'pipeline-step';
+            }
+
+            const outputs = document.getElementById('agentOutputs');
+            const names = ['Researcher', 'Outliner', 'Writer', 'Editor'];
+            const emojis = ['🔍', '📋', '✍️', '✨'];
+
+            outputs.innerHTML = names.map((name, i) => `
+                <div class="agent-card" id="agent-${i}">
+                    <div class="agent-header" onclick="toggleAgent(${i})">
+                        <div class="agent-emoji">${emojis[i]}</div>
+                        <div class="agent-info">
+                            <div class="agent-name">${name}</div>
+                            <div class="agent-desc">${agentDescriptions[i]}</div>
+                        </div>
+                        <span class="agent-status waiting" id="status-${i}">Waiting</span>
+                        <span class="agent-toggle">▼</span>
+                    </div>
+                    <div class="agent-body">
+                        <div class="agent-content" id="content-${i}"></div>
+                    </div>
+                </div>
+            `).join('');
+
+            try {
+                const response = await fetch('/api/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic }),
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                handleEvent(JSON.parse(line.slice(6)));
+                            } catch (e) {}
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error('Pipeline error:', err);
+            }
+
+            runBtn.disabled = false;
+            runBtn.textContent = 'Run Pipeline →';
+        }
+
+        function handleEvent(data) {
+            if (data.type === 'start') {
+                document.getElementById(`pipe-${data.agent}`).className = 'pipeline-step active';
+                const status = document.getElementById(`status-${data.agent}`);
+                status.className = 'agent-status running';
+                status.textContent = 'Working...';
+
+            } else if (data.type === 'result') {
+                document.getElementById(`pipe-${data.agent}`).className = 'pipeline-step done';
+                const status = document.getElementById(`status-${data.agent}`);
+                status.className = 'agent-status done';
+                status.textContent = 'Done';
+
+                document.getElementById(`content-${data.agent}`).textContent = data.output;
+
+                // Store for saving
+                currentAgentOutputs[data.agent] = data.output;
+
+                document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('expanded'));
+                document.getElementById(`agent-${data.agent}`).classList.add('expanded');
+
+                if (data.agent === 3 && !data.error) {
+                    showFinalPost(data.output);
+                }
+            }
+        }
+
+        function showFinalPost(editorOutput) {
+            let finalText = editorOutput;
+            const markers = ['FINAL VERSION', 'Final Version', '---'];
+            for (const marker of markers) {
+                const idx = editorOutput.indexOf(marker);
+                if (idx !== -1) {
+                    finalText = editorOutput.substring(idx + marker.length).trim().replace(/^[-\n]+/, '').trim();
+                    break;
+                }
+            }
+
+            currentFinalPost = finalText;
+
+            const outputs = document.getElementById('agentOutputs');
+            outputs.innerHTML += `
+                <div class="final-card">
+                    <div class="final-label">
+                        ✨ Final Blog Post
+                        <div class="btn-row" style="margin-left:auto;">
+                            <button class="action-btn save-btn" onclick="saveBlog()">💾 Save to Library</button>
+                            <button class="action-btn" onclick="copyFinal()">📋 Copy</button>
+                        </div>
+                    </div>
+                    <div class="final-content" id="finalContent">${finalText}</div>
+                </div>
+            `;
+        }
+
+        function copyFinal() {
+            const text = document.getElementById('finalContent').textContent;
+            navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'));
+        }
+
+        // ---------------------------------------------------------------------------
+        // Save / Load blogs
+        // ---------------------------------------------------------------------------
+        async function saveBlog() {
+            if (!currentTopic || !currentFinalPost) return;
+
+            try {
+                const res = await fetch('/api/blogs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        topic: currentTopic,
+                        agent_outputs: currentAgentOutputs,
+                        final_post: currentFinalPost,
+                    }),
+                });
+
+                if (res.ok) {
+                    showToast('Blog saved to library!');
+                } else {
+                    showToast('Error saving blog', true);
+                }
+            } catch (err) {
+                showToast('Error saving blog', true);
+            }
+        }
+
+        async function loadSavedBlogs() {
+            const list = document.getElementById('savedList');
+            list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-dim);">Loading...</div>';
+
+            try {
+                const res = await fetch('/api/blogs');
+                const blogs = await res.json();
+
+                if (blogs.length === 0) {
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">📚</div>
+                            <h3>No saved posts yet</h3>
+                            <p>Create a blog post and click "Save to Library" to store it here.</p>
+                        </div>`;
+                    return;
+                }
+
+                list.innerHTML = blogs.map(b => `
+                    <div class="saved-item" onclick="viewBlog(${b.id})">
+                        <div>
+                            <div class="saved-topic">${b.topic}</div>
+                            <div class="saved-date">${new Date(b.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit'
+                            })}</div>
+                        </div>
+                        <div class="saved-actions">
+                            <button class="action-btn delete-btn" onclick="event.stopPropagation(); deleteBlog(${b.id})">Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--red);">Error loading saved posts</div>';
+            }
+        }
+
+        async function viewBlog(blogId) {
+            try {
+                const res = await fetch(`/api/blogs/${blogId}`);
+                const blog = await res.json();
+
+                const names = ['Researcher', 'Outliner', 'Writer', 'Editor'];
+                const emojis = ['🔍', '📋', '✍️', '✨'];
+                const fields = ['research', 'outline', 'draft', 'edited'];
+
+                const agentCards = fields.map((field, i) => `
+                    <div class="agent-card" id="view-agent-${i}">
+                        <div class="agent-header" onclick="document.getElementById('view-agent-${i}').classList.toggle('expanded')">
+                            <div class="agent-emoji">${emojis[i]}</div>
+                            <div class="agent-info">
+                                <div class="agent-name">${names[i]}</div>
+                                <div class="agent-desc">${agentDescriptions[i]}</div>
+                            </div>
+                            <span class="agent-status done">Done</span>
+                            <span class="agent-toggle">▼</span>
+                        </div>
+                        <div class="agent-body">
+                            <div class="agent-content">${blog[field] || 'No output'}</div>
+                        </div>
+                    </div>
+                `).join('');
+
+                document.getElementById('viewPostContent').innerHTML = `
+                    <div class="input-card">
+                        <div style="font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Topic</div>
+                        <div style="font-size:20px; font-weight:600;">${blog.topic}</div>
+                        <div style="font-size:12px; color:var(--text-dim); margin-top:8px;">${new Date(blog.created_at).toLocaleDateString('en-US', {
+                            year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit'
+                        })}</div>
+                    </div>
+                    ${agentCards}
+                    <div class="final-card">
+                        <div class="final-label">
+                            ✨ Final Blog Post
+                            <button class="action-btn" onclick="navigator.clipboard.writeText(document.getElementById('viewFinal').textContent).then(()=>showToast('Copied!'))">📋 Copy</button>
+                        </div>
+                        <div class="final-content" id="viewFinal">${blog.final_post || blog.edited || 'No final post'}</div>
+                    </div>
+                `;
+
+                showView('viewpost');
+            } catch (err) {
+                showToast('Error loading blog', true);
+            }
+        }
+
+        async function deleteBlog(blogId) {
+            if (!confirm('Delete this saved blog post?')) return;
+
+            try {
+                await fetch(`/api/blogs/${blogId}`, { method: 'DELETE' });
+                showToast('Blog deleted');
+                loadSavedBlogs();
+            } catch (err) {
+                showToast('Error deleting', true);
+            }
+        }
+
+        // ---------------------------------------------------------------------------
+        // Toast
+        // ---------------------------------------------------------------------------
+        function showToast(msg, isError = false) {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.className = `toast visible ${isError ? 'error' : ''}`;
+            setTimeout(() => el.classList.remove('visible'), 3000);
+        }
+    </script>
+</body>
+</html>

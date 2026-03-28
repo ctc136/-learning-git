@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OFX>
+  <BANKMSGSRSV1>
+    <STMTTRNRS>
+      <STMTRS>
+        <CURDEF>USD</CURDEF>
+        <BANKTRANLIST>
+          <STMTTRN>
+            <TRNTYPE>DEBIT</TRNTYPE>
+            <DTPOSTED>20260301</DTPOSTED>
+            <TRNAMT>-42.00</TRNAMT>
+            <NAME>Target Store #1234</NAME>
+            <MEMO>Target Store Purchase</MEMO>
+          </STMTTRN>
+          <STMTTRN>
+            <TRNTYPE>DEBIT</TRNTYPE>
+            <DTPOSTED>20260303</DTPOSTED>
+            <TRNAMT>-28.50</TRNAMT>
+            <NAME>Uber Eats</NAME>
+            <MEMO>Food Delivery</MEMO>
+          </STMTTRN>
+          <STMTTRN>
+            <TRNTYPE>CREDIT</TRNTYPE>
+            <DTPOSTED>20260305</DTPOSTED>
+            <TRNAMT>1800.00</TRNAMT>
+            <NAME>Employer Direct Deposit</NAME>
+            <MEMO>Payroll March</MEMO>
+          </STMTTRN>
+          <STMTTRN>
+            <TRNTYPE>DEBIT</TRNTYPE>
+            <DTPOSTED>20260307</DTPOSTED>
+            <TRNAMT>-60.00</TRNAMT>
+            <NAME>BP Gas Station</NAME>
+            <MEMO>Fuel Purchase</MEMO>
+          </STMTTRN>
+          <STMTTRN>
+            <TRNTYPE>DEBIT</TRNTYPE>
+            <DTPOSTED>20260310</DTPOSTED>
+            <TRNAMT>-14.99</TRNAMT>
+            <NAME>Disney Plus</NAME>
+            <MEMO>Monthly Subscription</MEMO>
+          </STMTTRN>
+          <STMTTRN>
+            <TRNTYPE>DEBIT</TRNTYPE>
+            <DTPOSTED>20260312</DTPOSTED>
+            <TRNAMT>-95.00</TRNAMT>
+            <NAME>Internet Bill</NAME>
+            <MEMO>Monthly Internet Service</MEMO>
+          </STMTTRN>
+        </BANKTRANLIST>
+      </STMTRS>
+    </STMTTRNRS>
+  </BANKMSGSRSV1>
+</OFX>
