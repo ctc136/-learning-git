@@ -25,39 +25,14 @@ export default function CoreTracker({ data, lastCoreDate }) {
     : null;
 
   const alerting = daysSinceCore === null || daysSinceCore >= 5;
-
   const totalCoreSets = data.reduce((s, d) => s + d.sets, 0);
   const coreWorkoutDays = data.filter((d) => d.sets > 0).length;
 
   return (
     <div className="card" style={{ borderColor: alerting ? '#7c2d12' : undefined }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-        <div>
-          <h3 className="card-title">Core Tracker</h3>
-          <p className="card-subtitle">Core sets logged per workout day — last 90 days</p>
-        </div>
-        <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 16 }}>
-          {alerting ? (
-            <div style={{
-              background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)',
-              borderRadius: 8, padding: '6px 12px',
-            }}>
-              <p style={{ color: '#f87171', margin: 0, fontSize: 12, fontWeight: 600 }}>
-                ⚠ {daysSinceCore === null ? 'No core logged' : `${daysSinceCore}d since core`}
-              </p>
-              <p style={{ color: '#94a3b8', margin: '2px 0 0', fontSize: 11 }}>5+ day threshold</p>
-            </div>
-          ) : (
-            <div style={{
-              background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)',
-              borderRadius: 8, padding: '6px 12px',
-            }}>
-              <p style={{ color: '#34d399', margin: 0, fontSize: 12, fontWeight: 600 }}>
-                ✓ Core: {daysSinceCore}d ago
-              </p>
-            </div>
-          )}
-        </div>
+      <div style={{ marginBottom: 16 }}>
+        <h3 className="card-title">Core Tracker</h3>
+        <p className="card-subtitle">Core sets logged per workout day — last 90 days</p>
       </div>
 
       <div style={{ display: 'flex', gap: 20, marginBottom: 16 }}>

@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(git init:*)",
-      "mcp__hevy-mcp-server__get-workouts"
+      "mcp__hevy-mcp-server__get-workouts",
+      "WebFetch(domain:jobs.amapittsburgh.org)",
+      "WebSearch"
     ]
   }
 }

@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { verifyToken } from './_auth.js';
 
 const systemPrompt = `You are a personal trainer analyzing a user's workout history from the Hevy app.
 The user runs 2-3 times per week which is NOT tracked in Hevy, so do not flag legs as neglected.
@@ -20,6 +21,10 @@ Active recovery suggestion.
 Continue for all 7 days. Use the user's actual exercise names where possible.`;
 
 export default async function handler(req, res) {
+  if (!verifyToken(req)) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method Not Allowed' });
     return;

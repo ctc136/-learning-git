@@ -16,6 +16,93 @@ body {
   padding: 24px 20px 60px;
 }
 
+/* ── Login ── */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-card {
+  background: #12121e;
+  border: 1px solid #1e1e30;
+  border-radius: 16px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.login-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #6366f1 0%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+}
+
+.login-subtitle {
+  color: #475569;
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-input {
+  background: #0d0d18;
+  border: 1px solid #1e1e30;
+  border-radius: 10px;
+  color: #e2e8f0;
+  font-size: 15px;
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.login-input:focus {
+  border-color: #6366f1;
+}
+
+.login-input::placeholder {
+  color: #334155;
+}
+
+.login-error {
+  color: #f87171;
+  font-size: 13px;
+}
+
+.login-btn {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 12px;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.login-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.login-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ── Header ── */
 .header {
   display: flex;
@@ -38,6 +125,29 @@ body {
   color: #475569;
   font-size: 13px;
   margin-top: 3px;
+}
+
+/* ── Header right cluster ── */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logout-btn {
+  background: transparent;
+  border: 1px solid #1e1e30;
+  border-radius: 8px;
+  color: #475569;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 10px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.logout-btn:hover {
+  color: #94a3b8;
+  border-color: #2a2a40;
 }
 
 /* ── Badges ── */

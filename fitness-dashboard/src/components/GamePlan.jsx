@@ -142,7 +142,10 @@ export default function GamePlan({ workouts, muscleVolume, neglectedMuscles, wee
     try {
       const res = await fetch('/api/game-plan', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': localStorage.getItem('auth_token') || '',
+        },
         body: JSON.stringify(context),
       });
 

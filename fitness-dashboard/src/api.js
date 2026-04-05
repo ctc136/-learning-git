@@ -1,12 +1,18 @@
-// NOTE: API key is embedded here for local dev only.
-// Do not deploy this publicly without moving the key to a backend proxy.
-const API_KEY = import.meta.env.VITE_HEVY_API_KEY;
-const BASE_URL = 'https://api.hevyapp.com/v1';
-
-const headers = { 'api-key': API_KEY };
+function getToken() {
+  return localStorage.getItem('auth_token') || '';
+}
 
 async function get(path) {
-  const res = await fetch(`${BASE_URL}${path}`, { headers });
+  // path is like "/workouts?page=1&pageSize=10"
+  // Proxy through our serverless function at /api/hevy
+  const [pathname, search] = path.split('?');
+  const endpoint = pathname.replace(/^\//, ''); // e.g. "workouts"
+  const params = new URLSearchParams(search || '');
+  params.set('endpoint', endpoint);
+
+  const res = await fetch(`/api/hevy?${params.toString()}`, {
+    headers: { 'x-auth-token': getToken() },
+  });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Hevy API ${res.status}: ${text}`);

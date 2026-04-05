@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "fitness-dashboard",
+      "runtimeExecutable": "/usr/local/bin/node",
+      "runtimeArgs": ["fitness-dashboard/node_modules/.bin/vite", "fitness-dashboard", "--port", "5173"],
+      "port": 5173
+    },
+    {
       "name": "finance-frontend",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--prefix", "finance-app/frontend"],

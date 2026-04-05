@@ -12,20 +12,31 @@ import {
   TRACKED_EXERCISE_DISPLAY,
 } from './dataUtils';
 
+import { Analytics } from '@vercel/analytics/react';
 import WorkoutFrequency from './components/WorkoutFrequency';
 import VolumeChart from './components/VolumeChart';
 import NeglectedAlert from './components/NeglectedAlert';
 import ExerciseChart from './components/ExerciseChart';
 import CoreTracker from './components/CoreTracker';
 import GamePlan from './components/GamePlan';
+import Login from './components/Login';
+import StravaSection from './components/StravaSection';
 
 const DAYS = 90;
 
 export default function App() {
+  const [token, setToken] = useState(() => localStorage.getItem('auth_token'));
   const [state, setState] = useState({ status: 'idle', workouts: [], templates: [] });
   const [error, setError] = useState(null);
+  const [stravaState, setStravaState] = useState({ status: 'loading', data: null, error: null });
+
+  function handleLogout() {
+    localStorage.removeItem('auth_token');
+    setToken(null);
+  }
 
   useEffect(() => {
+    if (!token) return;
     let cancelled = false;
     setState((s) => ({ ...s, status: 'loading' }));
 
@@ -40,7 +51,29 @@ export default function App() {
       });
 
     return () => { cancelled = true; };
-  }, []);
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+
+    fetch('/api/strava')
+      .then(res => res.json())
+      .then(json => {
+        if (cancelled) return;
+        if (json.error) throw new Error(json.error);
+        setStravaState({ status: 'done', data: json, error: null });
+      })
+      .catch(err => {
+        if (!cancelled) setStravaState({ status: 'error', data: null, error: err.message });
+      });
+
+    return () => { cancelled = true; };
+  }, [token]);
+
+  if (!token) {
+    return <Login onLogin={setToken} />;
+  }
 
   const { status, workouts, templates } = state;
 
@@ -62,20 +95,18 @@ export default function App() {
           <h1 className="header-title">Fitness Dashboard</h1>
           <p className="header-subtitle">
             Last {DAYS} days · {workouts.length} workouts tracked via Hevy
+            {stravaState.status === 'done' && stravaState.data
+              ? ` · ${stravaState.data.totalRuns} runs, ${stravaState.data.totalMiles} mi via Strava`
+              : null}
           </p>
         </div>
-        <div className="header-badge">
+        <div className="header-right">
           {status === 'loading' && <span className="badge badge-loading">Syncing…</span>}
           {status === 'done' && <span className="badge badge-done">Live</span>}
           {error && <span className="badge badge-error">Error</span>}
+          <button className="logout-btn" onClick={handleLogout}>Logout</button>
         </div>
       </header>
-
-      {/* Running note */}
-      <div className="notice">
-        <span style={{ color: '#f59e0b', marginRight: 6 }}>⚡</span>
-        Running is not tracked in Hevy — leg and cardio volume will appear lower than your actual activity.
-      </div>
 
       {/* Error state */}
       {error && (
@@ -100,12 +131,23 @@ export default function App() {
         <>
           {/* ── Section 1: Overview Row ── */}
           <section>
-            <h2 className="section-title">Overview</h2>
+            <h2 className="section-title">Lifting Overview</h2>
             <div className="grid-3">
               <WorkoutFrequency data={weeklyFreq} />
               <VolumeChart data={muscleVolume} />
-              <NeglectedAlert neglected={neglected} />
+              <NeglectedAlert neglected={neglected} recentRuns={stravaState.data?.recentRuns} />
             </div>
+          </section>
+
+          {/* ── Section 1b: Running (Strava) ── */}
+          <section>
+            <h2 className="section-title">Running Overview</h2>
+            <p className="section-subtitle">Mileage and recent runs via Strava</p>
+            <StravaSection
+              data={stravaState.data}
+              status={stravaState.status}
+              error={stravaState.error}
+            />
           </section>
 
           {/* ── Section 2: Exercise Progress ── */}
@@ -149,8 +191,9 @@ export default function App() {
       )}
 
       <footer className="footer">
-        Data from Hevy · Dashboard built with React + Recharts · AI recommendations by Claude
+        Data from Hevy &amp; Strava · Dashboard built with React + Recharts · AI recommendations by Claude
       </footer>
+      <Analytics />
     </div>
   );
 }
